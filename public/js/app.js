@@ -31,9 +31,9 @@ socket.on('connect', () => {
 socket.on('smsStatus', (data) => {
   if (!data) return;
   if (data.error) {
-    displayStatus('Error: ' + data.error, permission);
+    displayStatus(`Error: ${data.error} ${permission}`);
   } else {
-    displayStatus('Message ID ' + data.id + ' successfully sent to ' + data.number, permission);
+    displayStatus(`Message ID ${data.id} successfully sent to ${data.number} ${permission}`);
   }
 });
 
@@ -43,8 +43,6 @@ if (lastNumber) {
 }
 
 function displayStatus(message, notification) {
-  console.log(notification);
-
   if (notification === 'granted') { // web notification
     const notification = new Notification('Nexmo', {
       body: message,
@@ -54,8 +52,8 @@ function displayStatus(message, notification) {
     msg.classList.add('poof');
     msg.textContent = message;
     msg.addEventListener('animationend', () => {
-    msg.textContent = '';
-    msg.classList.remove('poof');
+      msg.textContent = '';
+      msg.classList.remove('poof');
     }, false);
   }
 }
@@ -68,7 +66,7 @@ function send() {
 
   localStorage.setItem('number', number);
 
-  if(!self.fetch) {
+  if (!self.fetch) {
     alert("Bummer, your browser doesn't support Fetch API!");
     return;
     // Ideally, use XHR as the fallback for fetch.

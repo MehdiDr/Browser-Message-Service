@@ -1,6 +1,7 @@
 const config = require('./config');
 const express = require('express');
 const bodyParser = require('body-parser');
+const path = require('path');
 const ejs = require('ejs');
 const Nexmo = require('nexmo');
 const socketio = require('socket.io');
@@ -15,7 +16,7 @@ const server = app.listen(4000, () => {
 const nexmo = new Nexmo({
   apiKey: config.api_key,
   apiSecret: config.api_secret,
-}, {debug: true});
+}, { debug: true });
 
 // socket.io
 
@@ -29,10 +30,10 @@ io.on('connection', (socket) => {
 
 // Configure Express
 
-app.set('views', __dirname + '/../views');
+app.set('views', path.join(__dirname, '/../views'));
 app.set('view engine', 'html');
 app.engine('html', ejs.renderFile);
-app.use(express.static(__dirname + '/../public'));
+app.use(express.static(path.join(__dirname, '/../public')));
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: true }));
 
@@ -45,32 +46,31 @@ app.get('/', (req, res) => {
 app.post('/', (req, res) => {
   res.send(req.body);
 
-  let toNumber = req.body.number;
-  let text = req.body.text;
+  const toNumber = req.body.number;
+  const text = req.body.text;
 
   let data = {}; // the data to be emitted to front-end
 
   // Sending SMS via Nexmo
   nexmo.message.sendSms(
-    config.number, toNumber, text, {type: 'unicode'},
+    config.number, toNumber, text, { type: 'unicode' },
     (err, responseData) => {
       if (err) {
-        data = {error: err};
+        data = { error: err };
       } else {
-        //console.dir(responseData);
-        if(responseData.messages[0]['error-text']) {
-          data = {error: responseData.messages[0]['error-text']};
+        if (responseData.messages[0]['error-text']) {
+          data = { error: responseData.messages[0]['error-text'] };
         } else {
-          let n = responseData.messages[0]['to'].substr(0, responseData.messages[0]['to'].length - 4) + '****';
-          data = {id: responseData.messages[0]['message-id'], number: n};
+          const n = responseData.messages[0]['to'].substr(0, responseData.messages[0]['to'].length - 4) + '****';
+          data = { id: responseData.messages[0]['message-id'], number: n };
         }
         io.emit('smsStatus', data);
       }
-    }
+    },
   );
 
   // Basic Number Insight - get info about the phone number
-  nexmo.numberInsight.get({level:'basic', number: toNumber}, (err, responseData) => {
+  nexmo.numberInsight.get({ level: 'basic', number: toNumber }, (err, responseData) => {
     if (err) console.log(err);
     else {
       console.dir(responseData);
